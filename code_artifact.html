@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情侣连连看 - 我们的专属甜蜜回忆</title>
+    <!-- Tailwind CSS v3 Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Zen Maru Gothic & Long Cang for romantic vibe -->
+    <link href="https://fonts.googleapis.com/css2?family=Long+Cang&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background: linear-gradient(135deg, #fff0f3 0%, #ffe3e8 50%, #ffd1dc 100%);
+            min-height: 100vh;
+        }
+        .romantic-title {
+            font-family: 'Long Cang', cursive;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+        /* 自定义滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 228, 230, 0.5);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fda4af;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f43f5e;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen p-3 sm:p-6 text-slate-700">
+
+    <!-- 顶部状态栏 -->
+    <header class="w-full max-w-5xl bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-4 mb-4 flex flex-wrap items-center justify-between gap-4 border border-rose-100">
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl animate-bounce">💖</span>
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-rose-600 romantic-title tracking-wider">情侣连连看</h1>
+                <p class="text-xs text-slate-400">左侧地点 ⇄ 右侧回忆合照，快来连出我们的默契吧！</p>
+            </div>
+        </div>
+
+        <!-- 游戏统计信息 -->
+        <div class="flex items-center space-x-6">
+            <!-- 生命值 -->
+            <div class="flex flex-col items-center">
+                <span class="text-xs text-slate-400 font-medium mb-1">剩余生命</span>
+                <div id="hearts-container" class="flex space-x-1 text-xl">
+                    ❤️ ❤️ ❤️
+                </div>
+            </div>
+
+            <!-- 倒计时 -->
+            <div class="flex flex-col items-center bg-rose-50 px-4 py-1.5 rounded-xl border border-rose-100">
+                <span class="text-xs text-rose-400 font-medium">剩余时间</span>
+                <span id="timer-display" class="text-xl font-bold text-rose-600">100s</span>
+            </div>
+
+            <!-- 进度 -->
+            <div class="flex flex-col items-center bg-rose-50 px-4 py-1.5 rounded-xl border border-rose-100">
+                <span class="text-xs text-rose-400 font-medium">已连对</span>
+                <span id="score-display" class="text-xl font-bold text-rose-600">0 / 10</span>
+            </div>
+
+            <!-- 重新开始按钮 -->
+            <button onclick="startGame()" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md shadow-rose-200 transition active:scale-95 cursor-pointer">
+                重新开始
+            </button>
+        </div>
+    </header>
+
+    <!-- 游戏主区域：左右双栏 -->
+    <main class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow mb-4">
+        
+        <!-- 左侧：游玩地点 (10组) -->
+        <section class="bg-white/70 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-lg border border-rose-100 flex flex-col">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-rose-100">
+                <h2 class="font-bold text-rose-700 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                    游玩地点（左侧）
+                </h2>
+                <span class="text-xs text-slate-400">点击选择</span>
+            </div>
+            <div id="left-list" class="space-y-3 overflow-y-auto pr-1 max-h-[600px]">
+                <!-- 动态生成左侧卡片 -->
+            </div>
+        </section>
+
+        <!-- 右侧：情侣合照 (10张图片) -->
+        <section class="bg-white/70 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-lg border border-rose-100 flex flex-col">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-rose-100">
+                <h2 class="font-bold text-rose-700 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                    甜蜜合照（右侧）
+                </h2>
+                <span class="text-xs text-slate-400">点击配对</span>
+            </div>
+            <div id="right-list" class="space-y-3 overflow-y-auto pr-1 max-h-[600px]">
+                <!-- 动态生成右侧图片卡片 -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 页脚版权 -->
+    <footer class="text-center text-xs text-rose-400/80 py-2">
+        Made with ❤️ for Our Sweet Memories | 动力博
+    </footer>
+
+    <!-- 游戏开始/遮罩欢迎弹窗 -->
+    <div id="start-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border-4 border-rose-200">
+            <div class="text-6xl mb-4 animate-bounce">💖📷</div>
+            <h2 class="text-3xl font-bold text-rose-600 romantic-title mb-2">情侣连连看</h2>
+            <p class="text-slate-600 text-sm mb-6 leading-relaxed">
+                规则很简单：<br>
+                1. <b>100秒</b> 内将左侧的地点与右侧对应的 <b>合照 (1.jpg - 10.jpg)</b> 正确连线。<br>
+                2. 初始拥有 <b>3颗心生命值</b>，连错一次扣减 1 颗星。<br>
+                3. 全部连对即可解锁我们的专属浪漫回忆！
+            </p>
+            <button onclick="startGame()" class="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-rose-300 transition active:scale-95 text-lg cursor-pointer">
+                开始甜蜜挑战 ✨
+            </button>
+        </div>
+    </div>
+
+    <!-- 胜利弹窗 -->
+    <div id="win-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border-4 border-rose-200">
+            <div class="text-6xl mb-4 animate-bounce">🎉🌹</div>
+            <h2 class="text-3xl font-bold text-rose-600 romantic-title mb-2">太棒啦！通关成功！</h2>
+            <p id="win-text" class="text-slate-600 text-sm mb-6">
+                你太懂我们啦！所有的美好回忆都被完美点亮了~
+            </p>
+            <button onclick="startGame()" class="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-rose-300 transition active:scale-95 text-lg cursor-pointer">
+                再玩一次 🎈
+            </button>
+        </div>
+    </div>
+
+    <!-- 失败弹窗 -->
+    <div id="gameover-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border-4 border-slate-200">
+            <div class="text-6xl mb-4">🥺💔</div>
+            <h2 class="text-3xl font-bold text-slate-700 romantic-title mb-2">时间到 或 生命耗尽啦</h2>
+            <p class="text-slate-500 text-sm mb-6">
+                没关系，回忆那么多，再试一次一定能全部连对！
+            </p>
+            <button onclick="startGame()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-3.5 rounded-2xl shadow-lg transition active:scale-95 text-lg cursor-pointer">
+                不服输，重新挑战 🔄
+            </button>
+        </div>
+    </div>
+
+    <!-- 游戏核心逻辑脚本 -->
+    <script>
+        // 10组配对数据（左侧地点名称 + 右侧对应照片文件名 1.jpg - 10.jpg）
+        const pairsData = [
+            { id: 1, title: "北京", desc: "校园旁的湖畔绿荫与并肩漫步的悠闲时光", img: "1.jpg" },
+            { id: 2, title: "华中科技大学", desc: "一起散步吃饭", img: "2.jpg" },
+            { id: 3, title: "重庆小窝", desc: "暖灯与窗外夜色交织的惬意长情陪伴", img: "3.jpg" },
+            { id: 4, title: "宝泉", desc: "在璀璨星海光影中漫步的浪漫瞬间", img: "4.jpg" },
+            { id: 5, title: "孝感", desc: "祥云湾一日游", img: "5.jpg" },
+            { id: 6, title: "华中农业大学", desc: "凭栏远眺欣赏绝美落日余晖的温柔时刻", img: "6.jpg" },
+            { id: 7, title: "武汉理工大学", desc: "阳光操场上高高举起、充满欢声笑语的定格", img: "7.jpg" },
+            { id: 8, title: "武汉江滩", desc: "轻松日常里相视一笑的真实与可爱", img: "8.jpg" },
+            { id: 9, title: "中南民族大学", desc: "图书馆中共度春日烂漫与校园回忆", img: "9.jpg" },
+            { id: 10, title: "石家庄游记", desc: "长廊下静静伫立的侧影", img: "10.jpg" }
+        ];
+
+        let leftItems = [];
+        let rightItems = [];
+        let selectedLeft = null;
+        let selectedRight = null;
+        let matchedCount = 0;
+        let lives = 3;
+        let timeLeft = 100;
+        let timerInterval = null;
+        let gamePlaying = false;
+
+        // 洗牌算法
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function startGame() {
+            // 隐藏所有弹窗
+            document.getElementById('start-modal').style.display = 'none';
+            document.getElementById('win-modal').style.display = 'none';
+            document.getElementById('gameover-modal').style.display = 'none';
+
+            // 重置状态
+            lives = 3;
+            timeLeft = 100;
+            matchedCount = 0;
+            selectedLeft = null;
+            selectedRight = null;
+            gamePlaying = true;
+
+            updateUIStats();
+
+            // 复制并打乱左右两侧数据顺序，互不干扰
+            leftItems = shuffle([...pairsData.map(item => ({ ...item }))]);
+            rightItems = shuffle([...pairsData.map(item => ({ ...item }))]);
+
+            renderBoard();
+
+            // 启动定时器
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!gamePlaying) return;
+                timeLeft--;
+                document.getElementById('timer-display').innerText = timeLeft + 's';
+                if (timeLeft <= 0) {
+                    gameOver(false);
+                }
+            }, 1000);
+        }
+
+        function updateUIStats() {
+            let heartsHtml = '';
+            for (let i = 0; i < 3; i++) {
+                heartsHtml += i < lives ? '❤️ ' : '🖤 ';
+            }
+            document.getElementById('hearts-container').innerHTML = heartsHtml;
+            document.getElementById('score-display').innerText = matchedCount + ' / 10';
+            document.getElementById('timer-display').innerText = timeLeft + 's';
+        }
+
+        function renderBoard() {
+            const leftContainer = document.getElementById('left-list');
+            const rightContainer = document.getElementById('right-list');
+
+            leftContainer.innerHTML = '';
+            rightContainer.innerHTML = '';
+
+            // 渲染左侧地点
+            leftItems.forEach(item => {
+                const isMatched = item.matched;
+                const isSelected = selectedLeft === item.id;
+                
+                const div = document.createElement('div');
+                div.className = `p-3.5 rounded-2xl border transition-all flex items-center justify-between ${
+                    isMatched 
+                        ? 'bg-emerald-50 border-emerald-200 opacity-60 cursor-default' 
+                        : isSelected 
+                            ? 'bg-rose-100 border-rose-400 shadow-md ring-2 ring-rose-400' 
+                            : 'bg-white/90 border-rose-100 hover:border-rose-300 hover:shadow-sm cursor-pointer'
+                }`;
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 font-bold text-sm">📍</span>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm sm:text-base">${item.title}</h3>
+                            <p class="text-xs text-slate-400 line-clamp-1">${item.desc}</p>
+                        </div>
+                    </div>
+                    <div class="w-6 h-6 rounded-full border-2 ${isSelected ? 'border-rose-500 bg-rose-500' : 'border-slate-300'} flex items-center justify-center">
+                        ${isSelected ? '<span class="text-white text-xs">✓</span>' : ''}
+                    </div>
+                `;
+                if (!isMatched) {
+                    div.onclick = () => selectLeft(item.id);
+                }
+                leftContainer.appendChild(div);
+            });
+
+            // 渲染右侧照片
+            rightItems.forEach(item => {
+                const isMatched = item.matched;
+                const isSelected = selectedRight === item.id;
+                
+                const div = document.createElement('div');
+                div.className = `p-2.5 rounded-2xl border transition-all flex items-center justify-between ${
+                    isMatched 
+                        ? 'bg-emerald-50 border-emerald-200 opacity-60 cursor-default' 
+                        : isSelected 
+                            ? 'bg-rose-100 border-rose-400 shadow-md ring-2 ring-rose-400' 
+                            : 'bg-white/90 border-rose-100 hover:border-rose-300 hover:shadow-sm cursor-pointer'
+                }`;
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-14 h-14 rounded-xl overflow-hidden bg-rose-50 border border-rose-200 flex-shrink-0 shadow-sm">
+                            <img src="${item.img}" alt="回忆照片" class="w-full h-full object-cover" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23fda4af\' stroke-width=\'2\'><rect x=\'3\' y=\'3\' width=\'18\' height=\'18\' rx=\'2\'/><circle cx=\'8.5\' cy=\'8.5\' r=\'1.5\'/><path d=\'M21 15l-5-5L5 21\'/></svg>'">
+                        </div>
+                        <div>
+                            <span class="inline-block px-2 py-0.5 rounded-md bg-rose-50 text-rose-500 text-xs font-bold mb-1">合照回忆 #${item.id}</span>
+                            <p class="text-xs text-slate-400">点击选中与左侧地点配对</p>
+                        </div>
+                    </div>
+                    <div class="w-6 h-6 rounded-full border-2 ${isSelected ? 'border-rose-500 bg-rose-500' : 'border-slate-300'} flex items-center justify-center">
+                        ${isSelected ? '<span class="text-white text-xs">✓</span>' : ''}
+                    </div>
+                `;
+                if (!isMatched) {
+                    div.onclick = () => selectRight(item.id);
+                }
+                rightContainer.appendChild(div);
+            });
+        }
+
+        function selectLeft(id) {
+            if (!gamePlaying) return;
+            selectedLeft = id;
+            checkMatch();
+        }
+
+        function selectRight(id) {
+            if (!gamePlaying) return;
+            selectedRight = id;
+            checkMatch();
+        }
+
+        function checkMatch() {
+            renderBoard();
+
+            if (selectedLeft !== null && selectedRight !== null) {
+                if (selectedLeft === selectedRight) {
+                    const targetLeft = leftItems.find(i => i.id === selectedLeft);
+                    const targetRight = rightItems.find(i => i.id === selectedRight);
+                    if (targetLeft) targetLeft.matched = true;
+                    if (targetRight) targetRight.matched = true;
+
+                    matchedCount++;
+                    selectedLeft = null;
+                    selectedRight = null;
+                    updateUIStats();
+
+                    renderBoard();
+
+                    if (matchedCount === 10) {
+                        gameOver(true);
+                    }
+                } else {
+                    lives--;
+                    updateUIStats();
+
+                    const leftContainer = document.getElementById('left-list');
+                    const rightContainer = document.getElementById('right-list');
+                    leftContainer.classList.add('shake');
+                    rightContainer.classList.add('shake');
+
+                    setTimeout(() => {
+                        leftContainer.classList.remove('shake');
+                        rightContainer.classList.remove('shake');
+                        selectedLeft = null;
+                        selectedRight = null;
+                        renderBoard();
+                    }, 400);
+
+                    if (lives <= 0) {
+                        gameOver(false);
+                    }
+                }
+            }
+        }
+
+        function gameOver(isWin) {
+            gamePlaying = false;
+            clearInterval(timerInterval);
+
+            if (isWin) {
+                document.getElementById('win-text').innerHTML = `太棒啦！你在剩余 <b>${timeLeft}s</b> 和 <b>${lives}颗心</b> 的情况下通关成功！<br>我们的甜蜜回忆永远闪闪发光~ ✨`;
+                const winModal = document.getElementById('win-modal');
+                winModal.style.display = 'flex';
+                winModal.classList.remove('hidden');
+            } else {
+                const goModal = document.getElementById('gameover-modal');
+                goModal.style.display = 'flex';
+                goModal.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
